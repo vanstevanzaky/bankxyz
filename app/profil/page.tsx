@@ -188,8 +188,8 @@ export default function ProfilPage() {
         <div className="max-w-[800px] mx-auto">
           
           <header className="mb-10 pb-6 border-b border-slate-200">
-            <h1 className="text-4xl font-serif text-slate-900 mb-2">Profil Klien</h1>
-            <p className="text-slate-500 font-sans">Kelola informasi pribadi dan pengaturan keamanan Anda.</p>
+            <h1 className="text-4xl font-serif text-slate-900 mb-2">{user?.role === 'admin' ? 'Profil Administrator' : 'Profil Klien'}</h1>
+            <p className="text-slate-500 font-sans">{user?.role === 'admin' ? 'Kelola informasi akun administrator Anda.' : 'Kelola informasi pribadi dan pengaturan keamanan Anda.'}</p>
           </header>
 
           <div className="bg-white border border-slate-200 rounded-xl p-10 shadow-sm flex flex-col md:flex-row gap-12">
@@ -225,7 +225,7 @@ export default function ProfilPage() {
             <div className="flex-1 space-y-6">
               <div>
                 <h3 className="font-serif text-2xl text-slate-900">{user?.full_name}</h3>
-                <span className={`inline-flex mt-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-full ${tierColor}`}>
+                <span className={`inline-flex mt-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-full ${user?.role === 'admin' ? 'bg-rose-50 text-rose-700' : tierColor}`}>
                   {user?.role === 'admin' ? 'Administrator' : tierLabel}
                 </span>
               </div>

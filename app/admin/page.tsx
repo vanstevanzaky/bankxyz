@@ -424,19 +424,21 @@ export default function AdminPage() {
                           </td>
                           <td className="px-6 py-4 text-center">
                             <div className="flex items-center justify-center gap-2">
-                              <button 
-                                onClick={() => openEditUser(u)}
-                                className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 px-3 py-1.5 rounded-md transition-all"
-                              >
-                                Edit
-                              </button>
                               {u.role !== "admin" && (
-                                <button 
-                                  onClick={() => openDeleteUser(u)}
-                                  className="text-[10px] font-bold uppercase tracking-widest text-rose-600 hover:text-rose-800 border border-rose-200 hover:border-rose-400 px-3 py-1.5 rounded-md transition-all"
-                                >
-                                  Hapus
-                                </button>
+                                <>
+                                  <button 
+                                    onClick={() => openEditUser(u)}
+                                    className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 px-3 py-1.5 rounded-md transition-all"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button 
+                                    onClick={() => openDeleteUser(u)}
+                                    className="text-[10px] font-bold uppercase tracking-widest text-rose-600 hover:text-rose-800 border border-rose-200 hover:border-rose-400 px-3 py-1.5 rounded-md transition-all"
+                                  >
+                                    Hapus
+                                  </button>
+                                </>
                               )}
                             </div>
                           </td>
@@ -625,14 +627,7 @@ export default function AdminPage() {
             <label className="input-label">Telepon</label>
             <input type="text" className="input-field" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="input-label">Peran</label>
-              <select className="input-field" value={editRole} onChange={(e) => setEditRole(e.target.value)}>
-                <option value="nasabah">Nasabah</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="input-label">Kelas / Tier</label>
               <select className="input-field" value={editTier} onChange={(e) => setEditTier(e.target.value)}>
