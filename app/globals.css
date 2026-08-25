@@ -1,26 +1,213 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+  
+  --color-primary: #1C1F26; /* Deep Charcoal */
+  --color-primary-light: #2A2F3A;
+  --color-accent: #1d4ed8; /* blue-700 - Royal Blue */
+  --color-accent-hover: #1e40af; /* blue-800 */
+  --color-navy: #0B1220; /* Midnight Navy */
+}
+
+/* ============================================
+   BankXYZ — Premium Fintech Web App
+   Clean Backgrounds, Functional Colors, High Trust
+   ============================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Colors */
+  --bg-app: #F8F9FA; /* Clean Off-white / Very Light Gray */
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  
+  --text-main: #1C1F26;
+  --text-dim: #505561;
+  --text-muted: #8A8F9B;
+  
+  --border-subtle: rgba(28, 31, 38, 0.08); /* 1px very thin borders */
+  --border-strong: rgba(28, 31, 38, 0.15);
+  
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  
+  /* Minimalist Shadows - Barely visible to lift elements */
+  --shadow-editorial: 0 4px 20px -2px rgba(28, 31, 38, 0.03);
+  --shadow-none: none;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+h1, h2, h3, h4, h5, h6, .font-serif {
+  font-family: var(--font-playfair), ui-serif, Georgia, serif;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+/* Enforce Sans-Serif for ALL numbers in the app */
+.number-font, .font-mono {
+  font-family: var(--font-sans) !important;
+}
+
+.text-gold {
+  color: var(--color-accent);
+}
+
+/* ============================================
+   Editorial Cards
+   ============================================ */
+.editorial-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); /* Added slight rounding for modern feel */
+  box-shadow: var(--shadow-editorial);
+  padding: 3rem; /* Generous whitespace */
+}
+
+.editorial-card-sm {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+}
+
+/* Vertical dividers for editorial layout */
+.editorial-divider {
+  border-left: 1px solid var(--border-subtle);
+}
+
+/* ============================================
+   Forms & Inputs (Clean & Minimal)
+   ============================================ */
+.input-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-sans);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  color: var(--text-main);
+  background-color: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #2563eb; /* blue-600 */
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); /* ring-blue-600/20 */
+}
+
+.input-field::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Hide spin buttons for number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ============================================
+   Buttons (Premium Royal Blue)
+   ============================================ */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  background-color: #1d4ed8; /* bg-blue-700 */
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-family: var(--font-sans);
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #1e40af; /* bg-blue-800 */
+  color: #ffffff;
+}
+
+.btn-primary:disabled {
+  background-color: #94a3b8;
+  color: #f1f5f9;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  color: #1d4ed8; /* blue-700 */
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid #1d4ed8;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+  background-color: #eff6ff; /* blue-50 */
+}
+
+/* ============================================
+   Utilities
+   ============================================ */
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Elegant Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app); 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong); 
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted); 
 }

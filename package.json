@@ -1,5 +1,5 @@
 {
-  "name": "bankxyz_temp_init",
+  "name": "bankxyz-lab",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,12 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "jsonwebtoken": "^9.0.3",
+    "md5": "^2.3.0",
+    "mysql2": "^3.23.3",
     "next": "16.3.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/md5": "^2.3.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
