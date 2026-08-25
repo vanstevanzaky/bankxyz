@@ -11,11 +11,23 @@
 
 ## 🚀 Fitur Utama (*The Features*)
 
-Aplikasi ini dibungkus dengan antarmuka UI/UX *Fintech Premium* (menggunakan *Tailwind CSS* & *Glassmorphism Modals*), sehingga memberikan nuansa realistis layaknya aplikasi *startup* perbankan sungguhan. Fitur fungsionalnya meliputi:
-- **Retail Banking Dashboard**: Panel bagi nasabah untuk melihat total saldo, mutasi rekening, dan membuka rekening baru.
-- **Fund Transfers**: Sistem transfer dana antar rekening (baik milik sendiri maupun pihak lain).
-- **Profile Management**: Pengaturan profil nasabah dengan fitur unggah foto profil (*avatar*).
-- **Admin Console**: Panel khusus (*Role-based*) bagi administrator untuk melihat total nasabah, dana mengendap, hingga rekapitulasi data.
+Aplikasi ini dibungkus dengan antarmuka UI/UX *Fintech Premium* (menggunakan *Tailwind CSS* & *Glassmorphism Modals*), sehingga memberikan nuansa realistis layaknya aplikasi *startup* perbankan sungguhan.
+
+### Portal Nasabah (Klien)
+- **Retail Banking Dashboard**: Panel untuk melihat total saldo, daftar rekening, mutasi terkini, dan membuka rekening baru (dengan penamaan kustom).
+- **Fund Transfers**: Sistem transfer dana antar rekening (baik milik sendiri maupun pihak lain) dengan format nominal bertitik ribuan.
+- **Profile Management**: Pengaturan profil lengkap — edit email & telepon, ganti kata sandi, unggah & hapus foto profil (*avatar*).
+- **Sistem Tier/Kelas**: Nasabah memiliki kelas keanggotaan (*Reguler*, *Prioritas*, *Premium*) yang ditampilkan secara dinamis di sidebar dan halaman profil.
+- **Manajemen Rekening**: Buka rekening baru, beri nama alias, lihat detail mutasi, dan tutup rekening yang tidak diperlukan.
+
+### Panel Admin (Staf Internal)
+- **Dashboard Operasi Global**: Ringkasan statistik — total klien, rekening aktif, total likuiditas, dan jumlah transaksi.
+- **Manajemen Pengguna (CRUD)**: Edit data nasabah (nama, email, telepon, kelas/tier) dan hapus akun nasabah secara permanen.
+- **Manajemen Rekening**: Bekukan (*freeze*), aktifkan kembali (*unfreeze*), atau tutup paksa rekening nasabah.
+- **Riwayat Transaksi Global**: Tabel seluruh transaksi dari semua nasabah yang dapat dipantau secara real-time.
+- **Pembersihan Massal (*Bulk Cleanup*)**: Fitur untuk mendeteksi dan menghapus akun-akun dormant (saldo habis & tidak aktif > 1 tahun) secara otomatis.
+- **Ekspor Data**: Ekspor data rekening ke format CSV atau JSON untuk keperluan audit internal.
+- **Pencarian Intelijen**: Cari dan telusuri data nasabah secara spesifik.
 
 ---
 
@@ -27,22 +39,25 @@ Di balik UI yang memukau, kodenya menyembunyikan lebih dari sekadar 1-2 celah. B
    - *Titik Lemah*: Formulir *Login* (Nasabah & Admin). Kueri ke basis data tidak menggunakan *Prepared Statements*.
    - *Dampak*: *Authentication Bypass*, pencurian data.
 2. **Insecure Direct Object Reference / IDOR (A01: Broken Access Control)**
-   - *Titik Lemah*: API Transfer Dana dan API Detail Rekening.
-   - *Dampak*: Penyerang dapat menguras dana dari rekening yang bukan miliknya atau melihat mutasi rekening orang lain dengan sekadar menebak ID/Nomor Rekening.
+   - *Titik Lemah*: API Transfer Dana, API Detail Rekening, dan **API Edit Profil** (menerima `user_id` dari *request body*).
+   - *Dampak*: Penyerang dapat menguras dana dari rekening yang bukan miliknya, melihat mutasi orang lain, atau **mengubah profil nasabah lain** hanya dengan mengganti parameter ID.
 3. **Broken Access Control (A01)**
-   - *Titik Lemah*: Portal publik dan pembagian (*separation*) peran *User* vs *Admin*.
-   - *Dampak*: Staf internal (*Admin*) dapat mencoba *login* ke portal nasabah yang memicu *Information Disclosure* / *Username Enumeration*.
+   - *Titik Lemah*: Seluruh API Admin (`/api/admin/*`) — tidak memvalidasi peran (*role*) pengguna.
+   - *Dampak*: Nasabah biasa yang mengetahui URL endpoint admin dapat mengakses, mengedit, bahkan **menghapus akun nasabah lain** dan **membekukan rekening** tanpa otorisasi.
 4. **Cross-Site Request Forgery / CSRF**
    - *Titik Lemah*: Mekanisme pengiriman uang (*Transfer*) tidak menggunakan token Anti-CSRF dan *Cookie Session* menggunakan `SameSite=Lax/None`.
    - *Dampak*: Penyerang dapat menjebak nasabah untuk mentransfer uang tanpa disadari dengan hanya mengeklik sebuah tautan.
 5. **Cryptographic Failures (A02)**
-   - *Titik Lemah*: Skema basis data.
-   - *Dampak*: Kata sandi (*Password*) pengguna di basis data disimpan menggunakan metode *hashing* yang sangat usang (MD5) **tanpa *salt***, membuatnya rentan terhadap serangan *Rainbow Table*.
+   - *Titik Lemah*: Skema basis data & fitur **Ganti Password**.
+   - *Dampak*: Kata sandi pengguna disimpan menggunakan MD5 **tanpa *salt***. Bahkan saat mengganti password, hash baru tetap menggunakan MD5 — rentan terhadap *Rainbow Table*.
 6. **Security Misconfiguration (A05)**
-   - *Titik Lemah*: Penanganan *Error* secara global di API.
-   - *Dampak*: *Stack trace* dari Node.js dan pesan eror SQL yang mentah akan langsung dimunculkan (*exposed*) ke sisi klien, memberikan cetak biru (*blueprint*) server kepada penyerang.
+   - *Titik Lemah*: Penanganan *Error* secara global di seluruh API endpoint.
+   - *Dampak*: *Stack trace* Node.js dan pesan eror SQL yang mentah langsung dimunculkan ke sisi klien, memberikan cetak biru server kepada penyerang.
+7. **Mass Assignment / Bulk Deletion tanpa Rate Limit**
+   - *Titik Lemah*: API Pembersihan Massal (`/api/admin/cleanup`).
+   - *Dampak*: Penyerang yang menemukan endpoint ini dapat menghapus **seluruh akun nasabah** sekaligus tanpa batasan frekuensi (*rate limiting*).
 
-*(Ada beberapa kerentanan lain seperti keamanan sesi (JWT) yang lemah dan kerentanan unggah berkas (File Upload). Temukan semuanya!)*
+*(Ada beberapa kerentanan lain seperti keamanan sesi (JWT Secret lemah), kerentanan unggah berkas (Unrestricted File Upload), dan Command Injection di fitur ekspor. Temukan semuanya!)*
 
 ---
 
@@ -52,6 +67,7 @@ Di balik UI yang memukau, kodenya menyembunyikan lebih dari sekadar 1-2 celah. B
 - **Styling**: Vanilla CSS dikombinasikan dengan kelas utilitas dari **Tailwind CSS**.
 - **Database**: **MySQL** via paket `mysql2/promise` untuk koneksi *pool* dan eksekusi kueri mentah (*raw query*).
 - **Authentication**: Custom JWT (JSON Web Tokens) via *HttpOnly Cookies*.
+- **UI Components**: Custom Modals (*Alert*, *Prompt*, *Confirm*) dengan animasi *glassmorphism*.
 
 ---
 
@@ -63,11 +79,14 @@ Pastikan lingkungan lokal Anda sudah terpasang:
 - **MySQL Server** (XAMPP, Docker, atau instalasi lokal biasa)
 
 ### 2. Konfigurasi Basis Data (*Database Setup*)
-1. Buat *database* di MySQL Anda, lalu impor skema dengan mengeksekusi berkas `db/schema.sql`.
-   *(Berkas ini akan membuat basis data bernama `bankxyz_lab`, tabel-tabel struktural, serta menyuntikkan *seed data* dan beberapa akun *default*).*
+1. Buat *database* di MySQL Anda, lalu impor skema dengan mengeksekusi berkas `db/schema.sql`. Atau, Anda bisa menjalankan perintah otomatis ini:
+   ```bash
+   npm run db:setup
+   ```
+   *(Script ini akan membuat basis data bernama `bankxyz_lab`, tabel-tabel struktural, serta menyuntikkan *seed data* dan beberapa akun *default*).*
 2. **Kredensial Default**:
-   - **Administrator:** `admin` / `admin123`
-   - **Klien (Nasabah):** `budi.santoso` / `budi123`
+   - **Administrator:** `admin` / `admin123` *(masuk via `/admin/login`)*
+   - **Klien (Nasabah):** `budi.santoso` / `budi123` *(masuk via `/login`)*
 
 ### 3. Konfigurasi Lingkungan (*Environment Variables*)
 Ubah nama berkas `.env.example` menjadi `.env.local` di *root* proyek. Sesuaikan *port*, pengguna, dan kata sandi sesuai dengan MySQL di komputer Anda:
@@ -91,10 +110,45 @@ Setelah *server* berjalan, buka [http://localhost:3000](http://localhost:3000) d
 
 ---
 
+## 📂 Struktur Proyek (*Project Structure*)
+
+```
+bankxyz/
+├── app/
+│   ├── api/
+│   │   ├── admin/          # API Admin (users CRUD, rekening, cleanup, transaksi)
+│   │   ├── dashboard/      # API Dashboard data nasabah
+│   │   ├── login/          # API Login nasabah
+│   │   ├── register/       # API Registrasi nasabah baru
+│   │   ├── profil/         # API Edit profil & ganti password
+│   │   ├── rekening/       # API CRUD rekening + ekspor
+│   │   ├── transfer/       # API Transfer dana
+│   │   └── upload-foto/    # API Upload foto profil
+│   ├── admin/              # Halaman Admin (login + dashboard operasi)
+│   ├── dashboard/          # Halaman Dashboard nasabah
+│   ├── login/              # Halaman Login nasabah
+│   ├── register/           # Halaman Registrasi
+│   ├── profil/             # Halaman Profil (edit, password, foto)
+│   ├── rekening/           # Halaman Detail rekening + mutasi
+│   └── transfer/           # Halaman Transfer dana
+├── components/
+│   ├── Modal.tsx           # AlertModal, PromptModal, ConfirmModal
+│   ├── Sidebar.tsx         # Navigasi + tier badge dinamis
+│   ├── SearchNasabah.tsx   # Komponen pencarian admin
+│   └── TransferForm.tsx    # Form transfer dana
+├── db/
+│   └── schema.sql          # Skema database + seed data
+└── lib/
+    ├── auth.ts             # JWT helper (token, session, cookie)
+    └── db.ts               # MySQL connection pool
+```
+
+---
+
 ## 🎯 Misi Anda (*The Mission*)
 
 1. **Reconnaissance**: Petakan semua fitur. Cobalah *login* sebagai nasabah dan admin. Pahami alur aplikasi.
-2. **Exploitation**: Bertindaklah sebagai *Attacker*. Cobalah untuk mencuri uang nasabah lain tanpa *login* sebagai mereka, atau *bypass* halaman *login* admin dengan SQLi.
-3. **Mitigation**: Bertindaklah sebagai *Defender*. Tinjau kode sumber (*source code*) aplikasi dan tambal semua kerentanan yang Anda temukan (menggunakan parameter kueri, memvalidasi sesi, menambahkan token CSRF, dll).
+2. **Exploitation**: Bertindaklah sebagai *Attacker*. Cobalah untuk mencuri uang nasabah lain tanpa *login* sebagai mereka, atau *bypass* halaman *login* admin dengan SQLi. Coba akses endpoint admin tanpa otorisasi.
+3. **Mitigation**: Bertindaklah sebagai *Defender*. Tinjau kode sumber (*source code*) aplikasi dan tambal semua kerentanan yang Anda temukan (parameterized queries, validasi sesi, CSRF tokens, bcrypt hashing, dll).
 
 *Selamat bersenang-senang dan belajar! Retaslah dengan bijak.* 🛡️
