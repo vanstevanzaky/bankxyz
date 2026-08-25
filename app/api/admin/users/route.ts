@@ -16,7 +16,7 @@ export async function GET() {
 
     // Ambil semua users
     const [users] = await pool.query<RowDataPacket[]>(
-      'SELECT id, username, full_name, email, phone, role, foto_path, created_at FROM users ORDER BY id'
+      'SELECT id, username, full_name, email, phone, role, tier, foto_path, created_at FROM users ORDER BY id'
     );
 
     // Ambil semua rekening dengan info pemilik

@@ -14,7 +14,7 @@ export async function GET() {
 
     // Ambil data user
     const [users] = await pool.query<RowDataPacket[]>(
-      'SELECT id, username, full_name, email, phone, role, foto_path, created_at FROM users WHERE id = ?',
+      'SELECT id, username, full_name, email, phone, role, tier, foto_path, created_at FROM users WHERE id = ?',
       [session.id]
     );
 

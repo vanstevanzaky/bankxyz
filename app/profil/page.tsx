@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { AlertModal } from "@/components/Modal";
+import { AlertModal, PromptModal, ConfirmModal } from "@/components/Modal";
+import { BaseModal } from "@/components/Modal";
 
 interface User {
   id: number;
@@ -12,6 +13,7 @@ interface User {
   email: string;
   phone: string;
   role: string;
+  tier: string;
   foto_path: string | null;
 }
 
@@ -22,6 +24,23 @@ export default function ProfilPage() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [alertState, setAlertState] = useState<{ isOpen: boolean, title: string, message: string, type: "error" | "success" | "info" }>({ isOpen: false, title: "", message: "", type: "error" });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Edit profil state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+
+  // Password state
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwOld, setPwOld] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+
+  // Hapus foto state
+  const [deletePhotoOpen, setDeletePhotoOpen] = useState(false);
+  const [deletePhotoLoading, setDeletePhotoLoading] = useState(false);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -71,6 +90,88 @@ export default function ProfilPage() {
     }
   }
 
+  async function handleDeleteFoto() {
+    setDeletePhotoLoading(true);
+    try {
+      const res = await fetch("/api/profil", { method: "DELETE" });
+      if (res.ok) {
+        setUser((prev) => prev ? { ...prev, foto_path: null } : null);
+        setDeletePhotoOpen(false);
+        setAlertState({ isOpen: true, title: "Berhasil", message: "Foto profil berhasil dihapus", type: "success" });
+      } else {
+        const data = await res.json();
+        setAlertState({ isOpen: true, title: "Gagal", message: data.error, type: "error" });
+      }
+    } catch {
+      setAlertState({ isOpen: true, title: "Kesalahan", message: "Gagal terhubung ke peladen", type: "error" });
+    } finally {
+      setDeletePhotoLoading(false);
+    }
+  }
+
+  async function handleEditProfil(e: React.FormEvent) {
+    e.preventDefault();
+    setEditLoading(true);
+    try {
+      const res = await fetch("/api/profil", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: editEmail, phone: editPhone }),
+      });
+      const data = await res.json();
+      setEditOpen(false);
+      if (res.ok) {
+        setAlertState({ isOpen: true, title: "Berhasil", message: "Profil berhasil diperbarui", type: "success" });
+        fetchDashboard();
+      } else {
+        setAlertState({ isOpen: true, title: "Gagal", message: data.error, type: "error" });
+      }
+    } catch {
+      setEditOpen(false);
+      setAlertState({ isOpen: true, title: "Kesalahan", message: "Gagal terhubung ke peladen", type: "error" });
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
+  async function handleGantiPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (pwNew !== pwConfirm) {
+      setAlertState({ isOpen: true, title: "Validasi Gagal", message: "Password baru dan konfirmasi tidak cocok", type: "error" });
+      return;
+    }
+    setPwLoading(true);
+    try {
+      const res = await fetch("/api/profil/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password_lama: pwOld, password_baru: pwNew }),
+      });
+      const data = await res.json();
+      setPwOpen(false);
+      setPwOld(""); setPwNew(""); setPwConfirm("");
+      if (res.ok) {
+        setAlertState({ isOpen: true, title: "Berhasil", message: "Kata sandi berhasil diubah", type: "success" });
+      } else {
+        setAlertState({ isOpen: true, title: "Gagal", message: data.error, type: "error" });
+      }
+    } catch {
+      setPwOpen(false);
+      setAlertState({ isOpen: true, title: "Kesalahan", message: "Gagal terhubung ke peladen", type: "error" });
+    } finally {
+      setPwLoading(false);
+    }
+  }
+
+  function openEditModal() {
+    setEditEmail(user?.email || "");
+    setEditPhone(user?.phone || "");
+    setEditOpen(true);
+  }
+
+  const tierLabel = user?.tier === 'premium' ? 'Klien Premium' : user?.tier === 'prioritas' ? 'Klien Prioritas' : 'Klien Reguler';
+  const tierColor = user?.tier === 'premium' ? 'bg-amber-50 text-amber-700' : user?.tier === 'prioritas' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700';
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
@@ -81,7 +182,7 @@ export default function ProfilPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA]">
-      <Sidebar userRole={user?.role} userName={user?.full_name || "Klien"} userPhoto={user?.foto_path} />
+      <Sidebar userRole={user?.role} userName={user?.full_name || "Klien"} userPhoto={user?.foto_path} userTier={user?.tier} />
       
       <main className="flex-1 p-6 pt-24 md:pt-14 md:p-14 animate-fade-in md:ml-[280px]">
         <div className="max-w-[800px] mx-auto">
@@ -104,20 +205,28 @@ export default function ProfilPage() {
                 )}
               </div>
               
-              <div className="w-full text-center">
-                <label className="btn-outline w-full text-xs justify-center cursor-pointer">
+              <div className="w-full space-y-2 text-center">
+                <label className="btn-outline w-full text-xs justify-center cursor-pointer block">
                   {uploadLoading ? "Mengunggah..." : "Ubah Foto"}
                   <input ref={fileInputRef} type="file" className="hidden" onChange={handleUploadFoto} disabled={uploadLoading} accept="image/*" />
                 </label>
-                <p className="text-[10px] text-slate-400 mt-2 uppercase tracking-widest">JPG atau PNG. Maks 2MB.</p>
+                {user?.foto_path && (
+                  <button 
+                    onClick={() => setDeletePhotoOpen(true)}
+                    className="text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 transition-colors w-full"
+                  >
+                    Hapus Foto
+                  </button>
+                )}
+                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">JPG atau PNG. Maks 2MB.</p>
               </div>
             </div>
 
             <div className="flex-1 space-y-6">
               <div>
                 <h3 className="font-serif text-2xl text-slate-900">{user?.full_name}</h3>
-                <span className="inline-flex mt-2 bg-blue-50 text-blue-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-full">
-                  Klien Terverifikasi
+                <span className={`inline-flex mt-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-full ${tierColor}`}>
+                  {user?.role === 'admin' ? 'Administrator' : tierLabel}
                 </span>
               </div>
 
@@ -139,12 +248,80 @@ export default function ProfilPage() {
                   <p className="font-sans font-medium text-slate-900 capitalize">{user?.role === "admin" ? "Admin" : "Nasabah"}</p>
                 </div>
               </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100">
+                <button onClick={openEditModal} className="btn-primary flex-1 text-sm shadow-sm">
+                  Edit Profil
+                </button>
+                <button onClick={() => setPwOpen(true)} className="btn-outline flex-1 text-sm shadow-sm">
+                  Ganti Kata Sandi
+                </button>
+              </div>
             </div>
 
           </div>
 
         </div>
       </main>
+
+      {/* Edit Profile Modal */}
+      <BaseModal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Profil">
+        <form onSubmit={handleEditProfil} className="space-y-6">
+          <p className="text-sm text-slate-500">Perbarui alamat email dan nomor telepon Anda.</p>
+          <div>
+            <label className="input-label">Alamat Email</label>
+            <input type="email" className="input-field" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="email@contoh.com" />
+          </div>
+          <div>
+            <label className="input-label">Nomor Telepon</label>
+            <input type="text" className="input-field" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="08xxxxxxxxxx" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => setEditOpen(false)} className="btn-outline flex-1" disabled={editLoading}>Batal</button>
+            <button type="submit" className="btn-primary flex-1" disabled={editLoading}>
+              {editLoading ? "Menyimpan..." : "Simpan Perubahan"}
+            </button>
+          </div>
+        </form>
+      </BaseModal>
+
+      {/* Change Password Modal */}
+      <BaseModal isOpen={pwOpen} onClose={() => setPwOpen(false)} title="Ganti Kata Sandi">
+        <form onSubmit={handleGantiPassword} className="space-y-6">
+          <p className="text-sm text-slate-500">Masukkan kata sandi lama Anda, lalu tentukan kata sandi yang baru.</p>
+          <div>
+            <label className="input-label">Kata Sandi Lama</label>
+            <input type="password" className="input-field" value={pwOld} onChange={(e) => setPwOld(e.target.value)} placeholder="••••••••" required />
+          </div>
+          <div>
+            <label className="input-label">Kata Sandi Baru</label>
+            <input type="password" className="input-field" value={pwNew} onChange={(e) => setPwNew(e.target.value)} placeholder="Minimal 4 karakter" required />
+          </div>
+          <div>
+            <label className="input-label">Konfirmasi Kata Sandi Baru</label>
+            <input type="password" className="input-field" value={pwConfirm} onChange={(e) => setPwConfirm(e.target.value)} placeholder="Ketik ulang kata sandi baru" required />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => setPwOpen(false)} className="btn-outline flex-1" disabled={pwLoading}>Batal</button>
+            <button type="submit" className="btn-primary flex-1" disabled={pwLoading || !pwOld || !pwNew || !pwConfirm}>
+              {pwLoading ? "Menyimpan..." : "Ubah Kata Sandi"}
+            </button>
+          </div>
+        </form>
+      </BaseModal>
+
+      {/* Delete Photo Confirm */}
+      <ConfirmModal
+        isOpen={deletePhotoOpen}
+        onClose={() => setDeletePhotoOpen(false)}
+        onConfirm={handleDeleteFoto}
+        title="Hapus Foto Profil"
+        message="Apakah Anda yakin ingin menghapus foto profil? Foto akan diganti dengan inisial nama Anda."
+        confirmText="Hapus Foto"
+        loading={deletePhotoLoading}
+        variant="danger"
+      />
 
       <AlertModal 
         isOpen={alertState.isOpen}

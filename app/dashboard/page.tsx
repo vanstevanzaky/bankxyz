@@ -10,6 +10,8 @@ interface User {
   id: number;
   full_name: string;
   role: string;
+  tier: string;
+  foto_path: string | null;
 }
 
 interface Rekening {
@@ -112,7 +114,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA]">
-      <Sidebar userRole={user?.role} userName={user?.full_name || "Klien"} userPhoto={user?.foto_path} />
+      <Sidebar userRole={user?.role} userName={user?.full_name || "Klien"} userPhoto={user?.foto_path} userTier={user?.tier} />
       
       <main className="flex-1 p-6 pt-24 md:pt-14 md:p-14 animate-fade-in md:ml-[280px]">
         <div className="max-w-[1200px] mx-auto">

@@ -119,3 +119,48 @@ export function PromptModal({
     </BaseModal>
   );
 }
+
+interface ConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  loading?: boolean;
+  variant?: "danger" | "warning" | "info";
+}
+
+export function ConfirmModal({
+  isOpen, onClose, onConfirm, title, message,
+  confirmText = "Ya, Lanjutkan", cancelText = "Batal",
+  loading = false, variant = "danger"
+}: ConfirmModalProps) {
+  const colors = {
+    danger: { bg: "bg-rose-100", text: "text-rose-600", btn: "bg-rose-600 hover:bg-rose-700 text-white" },
+    warning: { bg: "bg-amber-100", text: "text-amber-600", btn: "bg-amber-600 hover:bg-amber-700 text-white" },
+    info: { bg: "bg-blue-100", text: "text-blue-600", btn: "bg-blue-600 hover:bg-blue-700 text-white" },
+  };
+  const c = colors[variant];
+
+  return (
+    <BaseModal isOpen={isOpen} onClose={onClose} title={title}>
+      <div className="flex flex-col items-center text-center">
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${c.bg} ${c.text}`}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <p className="text-slate-600 mb-6">{message}</p>
+        <div className="flex gap-3 w-full pt-2">
+          <button onClick={onClose} className="btn-outline flex-1 shadow-sm" disabled={loading}>
+            {cancelText}
+          </button>
+          <button onClick={onConfirm} className={`flex-1 px-4 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm ${c.btn}`} disabled={loading}>
+            {loading ? "Memproses..." : confirmText}
+          </button>
+        </div>
+      </div>
+    </BaseModal>
+  );
+}
+

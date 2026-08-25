@@ -2,7 +2,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function Sidebar({ userRole, userName, userPhoto }: { userRole?: string, userName?: string, userPhoto?: string | null }) {
+export default function Sidebar({ userRole, userName, userPhoto, userTier }: { userRole?: string, userName?: string, userPhoto?: string | null, userTier?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -46,8 +46,8 @@ export default function Sidebar({ userRole, userName, userPhoto }: { userRole?: 
           </div>
           <div className="overflow-hidden">
             <h2 className="font-serif text-xl font-bold text-slate-900 truncate">BankXYZ</h2>
-            <p className={`text-[10px] uppercase tracking-widest font-bold truncate ${userRole === 'admin' ? 'text-rose-600' : 'text-blue-700'}`}>
-              {userRole === 'admin' ? 'Staf Internal' : 'Klien Premium'}
+            <p className={`text-[10px] uppercase tracking-widest font-bold truncate ${userRole === 'admin' ? 'text-rose-600' : userTier === 'premium' ? 'text-amber-600' : userTier === 'prioritas' ? 'text-emerald-600' : 'text-blue-700'}`}>
+              {userRole === 'admin' ? 'Staf Internal' : userTier === 'premium' ? 'Klien Premium' : userTier === 'prioritas' ? 'Klien Prioritas' : 'Klien Reguler'}
             </p>
           </div>
         </div>

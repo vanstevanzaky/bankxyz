@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
     role ENUM('nasabah', 'admin') DEFAULT 'nasabah',
+    tier ENUM('reguler', 'prioritas', 'premium') DEFAULT 'reguler',
     foto_path VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
